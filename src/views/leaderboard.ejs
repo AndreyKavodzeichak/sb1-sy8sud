@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Gaming Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <%- include('partials/nav') %>
+
+    <main class="container mx-auto mt-10 px-4 pb-12">
+        <!-- Filters -->
+        <div class="mb-8">
+            <div class="bg-gray-800 rounded-lg p-4">
+                <form class="flex flex-wrap gap-4 items-end">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Time Period</label>
+                        <select name="period" class="bg-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All Time</option>
+                            <option value="month">This Month</option>
+                            <option value="week">This Week</option>
+                            <option value="day">Today</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Sort By</label>
+                        <select name="sort" class="bg-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="kd">K/D Ratio</option>
+                            <option value="kills">Total Kills</option>
+                            <option value="wins">Win Rate</option>
+                            <option value="matches">Matches Played</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-blue-600 px-6 py-2 rounded hover:bg-blue-700">
+                        Apply Filters
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="bg-gray-800 rounded-lg overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left">Rank</th>
+                        <th class="px-6 py-3 text-left">Player</th>
+                        <th class="px-6 py-3 text-right">Matches</th>
+                        <th class="px-6 py-3 text-right">K/D</th>
+                        <th class="px-6 py-3 text-right">Win Rate</th>
+                        <th class="px-6 py-3 text-right">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% leaderboard.forEach((player, index) => { %>
+                        <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                            <td class="px-6 py-4">
+                                <% if (index < 3) { %>
+                                    <span class="inline-block w-8 h-8 rounded-full bg-gradient-to-br 
+                                        <%= index === 0 ? 'from-yellow-400 to-yellow-600' : 
+                                           index === 1 ? 'from-gray-300 to-gray-500' :
+                                           'from-yellow-700 to-yellow-900' %> 
+                                        text-center leading-8 font-bold">
+                                        <%= index + 1 %>
+                                    </span>
+                                <% } else { %>
+                                    <%= index + 1 %>
+                                <% } %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <% if (player.avatar) { %>
+                                        <img src="<%= player.avatar %>" class="w-8 h-8 rounded-full mr-3">
+                                    <% } %>
+                                    <a href="/profile/<%= player.id %>" class="hover:text-blue-400">
+                                        <%= player.username %>
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono">
+                                <%= player.matches_played %>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono">
+                                <%= (player.kills / Math.max(player.deaths, 1)).toFixed(2) %>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="px-2 py-1 rounded <%= player.win_rate >= 50 ? 'bg-green-600' : 'bg-red-600' %>">
+                                    <%= ((player.wins / Math.max(player.matches_played, 1)) * 100).toFixed(1) %>%
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono">
+                                <%= player.score %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex justify-center">
+            <div class="flex space-x-2">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>" 
+                       class="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700">
+                        Previous
+                    </a>
+                <% } %>
+                
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <a href="?page=<%= i %>" 
+                       class="px-4 py-2 rounded <%= currentPage === i ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700' %>">
+                        <%= i %>
+                    </a>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %>" 
+                       class="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700">
+                        Next
+                    </a>
+                <% } %>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

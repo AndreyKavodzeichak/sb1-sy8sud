@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match History - Gaming Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <%- include('../partials/nav') %>
+
+    <main class="container mx-auto mt-10 px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Match History -->
+            <div class="lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-6">Recent Matches</h2>
+                <div class="bg-gray-800 rounded-lg overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Date</th>
+                                <th class="px-6 py-3 text-left">Map</th>
+                                <th class="px-6 py-3 text-left">K/D</th>
+                                <th class="px-6 py-3 text-left">Weapon</th>
+                                <th class="px-6 py-3 text-left">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% matches.forEach(match => { %>
+                                <tr class="border-t border-gray-700">
+                                    <td class="px-6 py-4">
+                                        <%= new Date(match.match_date).toLocaleDateString() %>
+                                    </td>
+                                    <td class="px-6 py-4"><%= match.map %></td>
+                                    <td class="px-6 py-4"><%= match.kills %>/<%= match.deaths %></td>
+                                    <td class="px-6 py-4"><%= match.weapon_used %></td>
+                                    <td class="px-6 py-4">
+                                        <span class="<%= match.result === 'win' ? 'text-green-500' : 'text-red-500' %>">
+                                            <%= match.result.toUpperCase() %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Add Match Form -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">Add Match</h2>
+                <form action="/stats/match" method="POST">
+                    <div class="mb-4">
+                        <label class="block mb-2">Kills</label>
+                        <input type="number" name="kills" required min="0"
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block mb-2">Deaths</label>
+                        <input type="number" name="deaths" required min="0"
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block mb-2">Weapon Used</label>
+                        <select name="weapon" required
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                            <option value="Rifle">Rifle</option>
+                            <option value="Sniper">Sniper</option>
+                            <option value="Shotgun">Shotgun</option>
+                            <option value="SMG">SMG</option>
+                            <option value="Pistol">Pistol</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block mb-2">Map</label>
+                        <input type="text" name="map" required
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block mb-2">Result</label>
+                        <select name="result" required
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                            <option value="win">Win</option>
+                            <option value="loss">Loss</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                        Add Match
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="mt-8 bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Performance Trend</h2>
+            <canvas id="performanceChart" height="100"></canvas>
+        </div>
+    </main>
+
+    <script>
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const matches = <%- JSON.stringify(matches) %>;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: matches.reverse().map(m => new Date(m.match_date).toLocaleDateString()),
+            datasets: [{
+                label: 'K/D Ratio',
+                data: matches.map(m => m.kills / Math.max(m.deaths, 1)),
+                borderColor: 'rgb(59, 130, 246)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'white'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'white'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>

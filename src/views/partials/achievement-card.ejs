@@ -1,0 +1,14 @@
+<div class="mb-4 last:mb-0 transform hover:scale-105 transition-transform duration-200">
+    <div class="flex items-center bg-gray-750 p-4 rounded-lg">
+        <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mr-4 shadow-lg">
+            <svg class="w-6 h-6 text-gray-900" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-lg"><%= name %></h3>
+            <p class="text-sm text-gray-400"><%= description %></p>
+            <p class="text-xs text-gray-500 mt-1">Unlocked <%= formatDistanceToNow(new Date(unlockedAt), { addSuffix: true }) %></p>
+        </div>
+    </div>
+</div>

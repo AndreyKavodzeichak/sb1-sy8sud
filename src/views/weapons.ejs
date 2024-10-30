@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weapon Stats - Gaming Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <%- include('partials/nav') %>
+
+    <main class="container mx-auto mt-10 px-4 pb-12">
+        <!-- Favorite Weapon Card -->
+        <% if (favoriteWeapon) { %>
+            <div class="bg-gray-800 rounded-lg p-8 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Favorite Weapon</h2>
+                        <p class="text-4xl text-blue-400"><%= favoriteWeapon.weapon_used %></p>
+                        <p class="text-gray-400 mt-2">Used in <%= favoriteWeapon.count %> matches</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-green-400">
+                            <%= weaponStats.find(w => w.weapon_used === favoriteWeapon.weapon_used).win_rate %>%
+                        </div>
+                        <p class="text-gray-400">Win Rate</p>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Weapon Stats Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Detailed Stats -->
+            <div class="lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-6">Weapon Statistics</h2>
+                <div class="bg-gray-800 rounded-lg overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Weapon</th>
+                                <th class="px-6 py-3 text-right">Uses</th>
+                                <th class="px-6 py-3 text-right">Avg Kills</th>
+                                <th class="px-6 py-3 text-right">K/D</th>
+                                <th class="px-6 py-3 text-right">Win Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% weaponStats.forEach(weapon => { %>
+                                <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                                    <td class="px-6 py-4 font-semibold"><%= weapon.weapon_used %></td>
+                                    <td class="px-6 py-4 text-right"><%= weapon.total_uses %></td>
+                                    <td class="px-6 py-4 text-right text-green-400"><%= weapon.avg_kills %></td>
+                                    <td class="px-6 py-4 text-right text-blue-400">
+                                        <%= (weapon.total_kills / Math.max(weapon.total_deaths, 1)).toFixed(2) %>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span class="px-2 py-1 rounded <%= weapon.win_rate >= 50 ? 'bg-green-600' : 'bg-red-600' %>">
+                                            <%= weapon.win_rate %>%
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div>
+                <h2 class="text-2xl font-bold mb-6">Usage Distribution</h2>
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <canvas id="weaponChart"></canvas>
+                </div>
+
+                <div class="mt-8">
+                    <h2 class="text-2xl font-bold mb-6">Recent Matches</h2>
+                    <div class="space-y-4">
+                        <% recentMatches.forEach(match => { %>
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <span class="<%= match.result === 'win' ? 'text-green-500' : 'text-red-500' %> font-bold">
+                                            <%= match.result.toUpperCase() %>
+                                        </span>
+                                        <span class="text-gray-400 ml-2"><%= match.weapon_used %></span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-mono"><%= match.kills %>/<%= match.deaths %></div>
+                                        <div class="text-sm text-gray-400">
+                                            <%= new Date(match.match_date).toLocaleDateString() %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const ctx = document.getElementById('weaponChart').getContext('2d');
+    const weaponStats = <%- JSON.stringify(weaponStats) %>;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: weaponStats.map(w => w.weapon_used),
+            datasets: [{
+                data: weaponStats.map(w => w.total_uses),
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(167, 139, 250, 0.8)',
+                    'rgba(251, 191, 36, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>

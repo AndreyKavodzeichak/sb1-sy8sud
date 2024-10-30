@@ -1,0 +1,36 @@
+<nav class="bg-gray-800 p-4">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-8">
+            <a href="/" class="text-xl font-bold">GamingStats</a>
+            <% if (locals.user) { %>
+                <div class="hidden md:flex space-x-4">
+                    <a href="/dashboard" class="hover:text-blue-400">Dashboard</a>
+                    <a href="/stats/history" class="hover:text-blue-400">Match History</a>
+                    <a href="/leaderboard" class="hover:text-blue-400">Leaderboard</a>
+                    <% if (locals.user.role === 'admin') { %>
+                        <a href="/admin" class="hover:text-blue-400">Admin</a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <% if (locals.user) { %>
+                <div class="flex items-center">
+                    <% if (locals.user.avatar) { %>
+                        <img src="<%= locals.user.avatar %>" class="w-8 h-8 rounded-full mr-2">
+                    <% } %>
+                    <span class="mr-4"><%= locals.user.username %></span>
+                </div>
+                <form action="/logout" method="POST" class="inline">
+                    <button type="submit" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">
+                        Logout
+                    </button>
+                </form>
+            <% } else { %>
+                <a href="/login" class="hover:text-blue-400">Login</a>
+                <a href="/register" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">Register</a>
+            <% } %>
+        </div>
+    </div>
+</nav>

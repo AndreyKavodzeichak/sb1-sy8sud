@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gaming Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/chart.js"></script>
+    <style>
+        @keyframes pulse-border {
+            0% { border-color: rgba(59, 130, 246, 0.5); }
+            50% { border-color: rgba(59, 130, 246, 0.8); }
+            100% { border-color: rgba(59, 130, 246, 0.5); }
+        }
+        .profile-card {
+            animation: pulse-border 2s infinite;
+        }
+        .bg-gray-750 { background-color: rgba(31, 41, 55, 0.7); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <%- include('partials/nav') %>
+
+    <main class="container mx-auto mt-10 px-4 pb-12">
+        <!-- Profile Section -->
+        <div class="bg-gray-800 rounded-lg p-8 mb-8 profile-card border-2 border-transparent">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center">
+                    <div class="relative">
+                        <% if (user.avatar) { %>
+                            <img src="<%= user.avatar %>" class="w-20 h-20 rounded-full mr-6 border-4 border-blue-500">
+                            <div class="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-gray-800"></div>
+                        <% } %>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold mb-1"><%= user.username %></h1>
+                        <p class="text-gray-400">Member since <%= new Date(user.created_at).toLocaleDateString() %></p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="inline-block bg-gray-750 rounded-lg p-4">
+                        <p class="text-2xl font-bold text-blue-400">#<%= rank %></p>
+                        <p class="text-sm text-gray-400">Top <%= (rank / totalPlayers * 100).toFixed(1) %>% Player</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <%- include('partials/stats-card', {
+                title: 'Kills',
+                value: stats.kills,
+                valueColor: 'text-green-500',
+                subtitle: `Avg: ${(stats.kills / Math.max(stats.matches_played, 1)).toFixed(1)}/match`,
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+            }) %>
+            
+            <%- include('partials/stats-card', {
+                title: 'Deaths',
+                value: stats.deaths,
+                valueColor: 'text-red-500',
+                subtitle: `Avg: ${(stats.deaths / Math.max(stats.matches_played, 1)).toFixed(1)}/match`,
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>'
+            }) %>
+            
+            <%- include('partials/stats-card', {
+                title: 'K/D Ratio',
+                value: stats.deaths > 0 ? (stats.kills / stats.deaths).toFixed(2) : stats.kills.toFixed(2),
+                valueColor: 'text-blue-500',
+                subtitle: `Global Avg: ${globalKD.toFixed(2)}`,
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>'
+            }) %>
+            
+            <%- include('partials/stats-card', {
+                title: 'Win Rate',
+                value: `${((stats.wins / Math.max(stats.matches_played, 1)) * 100).toFixed(1)}%`,
+                valueColor: 'text-purple-500',
+                subtitle: `${stats.wins}W - ${stats.losses}L`,
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>'
+            }) %>
+        </div>
+
+        <!-- Recent Activity and Achievements -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Recent Matches -->
+            <div class="lg:col-span-2">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Recent Activity</h2>
+                    <a href="/stats/history" class="text-blue-400 hover:text-blue-300 text-sm">View All</a>
+                </div>
+                <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                    <% recentMatches.forEach(match => { %>
+                        <%- include('partials/match-card', {
+                            result: match.result,
+                            map: match.map,
+                            kills: match.kills,
+                            deaths: match.deaths,
+                            weapon: match.weapon_used,
+                            date: match.match_date,
+                            formatDate: (date) => new Date(date).toLocaleDateString(),
+                            formatTime: (date) => new Date(date).toLocaleTimeString()
+                        }) %>
+                    <% }); %>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div>
+                <h2 class="text-2xl font-bold mb-6">Achievements</h2>
+                <div class="space-y-4">
+                    <% if (achievements.length > 0) { %>
+                        <% achievements.forEach(achievement => { %>
+                            <%- include('partials/achievement-card', {
+                                name: achievement.name,
+                                description: achievement.description,
+                                unlockedAt: achievement.unlocked_at,
+                                formatDistanceToNow: formatDistanceToNow
+                            }) %>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="bg-gray-800 rounded-lg p-8 text-center">
+                            <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+                            </svg>
+                            <p class="text-gray-400">No achievements yet.</p>
+                            <p class="text-sm text-gray-500 mt-2">Keep playing to unlock achievements!</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="mt-8 bg-gray-800 rounded-lg p-6 shadow-xl">
+            <h2 class="text-2xl font-bold mb-6">Performance Trend</h2>
+            <canvas id="performanceChart" height="100"></canvas>
+        </div>
+    </main>
+
+    <script>
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const matches = <%- JSON.stringify(recentMatches) %>;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: matches.reverse().map(m => new Date(m.match_date).toLocaleDateString()),
+            datasets: [{
+                label: 'K/D Ratio',
+                data: matches.map(m => m.kills / Math.max(m.deaths, 1)),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'white'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'white'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>

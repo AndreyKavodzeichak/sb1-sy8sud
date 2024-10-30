@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= profile.username %>'s Profile - Gaming Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <%- include('partials/nav') %>
+
+    <main class="container mx-auto mt-10 px-4 pb-12">
+        <!-- Profile Header -->
+        <div class="bg-gray-800 rounded-lg p-8 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <% if (profile.avatar) { %>
+                        <img src="<%= profile.avatar %>" class="w-24 h-24 rounded-full mr-6">
+                    <% } else { %>
+                        <div class="w-24 h-24 rounded-full bg-gray-700 mr-6 flex items-center justify-center text-3xl">
+                            <%= profile.username.charAt(0).toUpperCase() %>
+                        </div>
+                    <% } %>
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2"><%= profile.username %></h1>
+                        <p class="text-gray-400">Member since <%= new Date(profile.created_at).toLocaleDateString() %></p>
+                        <div class="mt-4">
+                            <% if (!isSelf && !isFriend) { %>
+                                <form action="/friends/request/<%= profile.id %>" method="POST" class="inline">
+                                    <button type="submit" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+                                        Add Friend
+                                    </button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="inline-block bg-gray-700 rounded-lg p-4">
+                        <p class="text-2xl font-bold text-blue-400">#<%= rank %></p>
+                        <p class="text-sm text-gray-400">Global Rank</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <%- include('partials/stats-card', {
+                title: 'Matches',
+                value: stats.matches_played,
+                valueColor: 'text-blue-500',
+                subtitle: `${stats.wins}W - ${stats.losses}L`,
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>'
+            }) %>
+            
+            <%- include('partials/stats-card', {
+                title: 'Win Rate',
+                value: `${((stats.wins / Math.max(stats.matches_played, 1)) * 100).toFixed(1)}%`,
+                valueColor: 'text-green-500',
+                subtitle: 'Overall Success',
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+            }) %>
+            
+            <%- include('partials/stats-card', {
+                title: 'K/D Ratio',
+                value: (stats.kills / Math.max(stats.deaths, 1)).toFixed(2),
+                valueColor: 'text-purple-500',
+                subtitle: `${stats.kills} Kills - ${stats.deaths} Deaths`,
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>'
+            }) %>
+            
+            <%- include('partials/stats-card', {
+                title: 'Favorite Weapon',
+                value: stats.favorite_weapon || 'None',
+                valueColor: 'text-yellow-500',
+                subtitle: 'Most Used',
+                icon: '<svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>'
+            }) %>
+        </div>
+
+        <!-- Recent Matches -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-6">Recent Matches</h2>
+                <div class="bg-gray-800 rounded-lg overflow-hidden">
+                    <% recentMatches.forEach(match => { %>
+                        <%- include('partials/match-card', {
+                            result: match.result,
+                            map: match.map,
+                            kills: match.kills,
+                            deaths: match.deaths,
+                            weapon: match.weapon_used,
+                            date: match.match_date,
+                            formatDate: (date) => new Date(date).toLocaleDateString(),
+                            formatTime: (date) => new Date(date).toLocaleTimeString()
+                        }) %>
+                    <% }); %>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div>
+                <h2 class="text-2xl font-bold mb-6">Achievements</h2>
+                <div class="bg-gray-800 rounded-lg overflow-hidden">
+                    <% if (achievements.length > 0) { %>
+                        <% achievements.forEach(achievement => { %>
+                            <%- include('partials/achievement-card', {
+                                name: achievement.name,
+                                description: achievement.description,
+                                unlockedAt: achievement.unlocked_at,
+                                formatDistanceToNow: formatDistanceToNow
+                            }) %>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="p-8 text-center text-gray-400">
+                            <p>No achievements yet</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="mt-8 bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Performance History</h2>
+            <canvas id="performanceChart" height="100"></canvas>
+        </div>
+    </main>
+
+    <script>
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const matches = <%- JSON.stringify(recentMatches) %>;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: matches.reverse().map(m => new Date(m.match_date).toLocaleDateString()),
+            datasets: [{
+                label: 'K/D Ratio',
+                data: matches.map(m => m.kills / Math.max(m.deaths, 1)),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'white'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'white'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>
